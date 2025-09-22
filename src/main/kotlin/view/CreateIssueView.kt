@@ -43,7 +43,7 @@ fun CreateIssueView(youTrackService: YouTrackService) {
 
         Button(onClick = { expanded = true }, enabled = projects.isNotEmpty(),
             colors = ButtonDefaults.buttonColors(backgroundColor = Color(55, 71, 82), contentColor = Color(211,211,211))) {
-            Text(selectedProject?.name ?: "Loading...")
+            Text(selectedProject?.name ?: "No projects available\nor still loading...")
         }
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
