@@ -1,13 +1,12 @@
 package view
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,6 +23,8 @@ fun CreateIssueView(youTrackService: YouTrackService) {
     var summary by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    var creatingIssue by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("Click the button to create an issue") }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -33,16 +34,16 @@ fun CreateIssueView(youTrackService: YouTrackService) {
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp).fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Column {
-            Text("Choose project")
+        Text("Choose project", color = Color(211,211,211))
 
-            Button(onClick = { expanded = true }, enabled = projects.isNotEmpty()) {
-                Text(selectedProject?.name ?: "Loading...")
-            }
+        Button(onClick = { expanded = true }, enabled = projects.isNotEmpty(),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(55, 71, 82), contentColor = Color(211,211,211))) {
+            Text(selectedProject?.name ?: "Loading...")
         }
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -56,24 +57,37 @@ fun CreateIssueView(youTrackService: YouTrackService) {
             }
         }
 
+        Spacer(modifier = Modifier.width(32.dp))
+
         TextField(
             value = summary,
             onValueChange = { summary = it },
-            label = { Text("Enter issue summary") }
+            label = { Text("Enter issue summary", color = Color(69, 101, 122)) },
+            colors = TextFieldDefaults.textFieldColors(
+                textColor = Color(211,211,211),
+                focusedIndicatorColor = Color(55,71,82),
+            )
         )
 
         Button(
             onClick = {
+                creatingIssue = true
+                message = "Creating issue..."
                 coroutineScope.launch {
                     withContext(Dispatchers.IO) {
-                        youTrackService.createIssue(Issue(selectedProject!!, summary))
+                        val isCreated = youTrackService.createIssue(Issue(selectedProject!!, summary))
+                        if(isCreated) message = "Issue created successfully!"
+                        else message = "An error occurred!"
                     }
+                    creatingIssue = false
                 }
             },
-            enabled = selectedProject != null && summary.isNotEmpty()
+            enabled = selectedProject != null && summary.isNotEmpty() && !creatingIssue,
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(51, 71, 82), contentColor = Color(211,211,211))
         ) {
             Text("Create issue")
         }
+        Text(message, color = Color(211,211,211))
     }
 
 }
